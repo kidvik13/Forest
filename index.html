@@ -94,43 +94,85 @@
   }
   .mode-btn:hover:not(.active) { color: var(--ink); }
 
-  .durations {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-  }
-  .dur-btn {
-    border: 1px solid transparent;
+  .duration-control {
+    max-width: 420px;
+    margin: 0 auto 28px;
     background: white;
-    padding: 6px 14px;
-    border-radius: 8px;
-    cursor: pointer;
+    padding: 16px 20px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+  .duration-control .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
     color: var(--ink-soft);
     font-size: 13px;
-    transition: all 0.15s;
   }
-  .dur-btn.active {
-    border-color: var(--leaf);
+  .duration-control .label-row .value {
     color: var(--leaf-deep);
-    background: #f0f6ee;
+    font-weight: 600;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
   }
-  .dur-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .duration-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--bg-soft);
+    border-radius: 999px;
+    outline: none;
+  }
+  .duration-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--leaf-deep);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.15s;
+  }
+  .duration-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+  .duration-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--leaf-deep);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .duration-slider:disabled { opacity: 0.5; cursor: not-allowed; }
+  .duration-slider:disabled::-webkit-slider-thumb { cursor: not-allowed; }
+  .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
 
   .timer-stage {
     position: relative;
     width: 360px;
-    height: 360px;
-    margin: 0 auto 24px;
+    height: 400px;
+    margin: 0 auto 8px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
   }
 
   .progress-ring {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 360px;
+    height: 360px;
     transform: rotate(-90deg);
   }
   .ring-bg {
@@ -151,9 +193,12 @@
   .tree-wrap {
     width: 220px;
     height: 220px;
+    margin-top: 70px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
+    position: relative;
+    z-index: 1;
   }
 
   .tree-svg {
@@ -178,15 +223,13 @@
   }
 
   .time-display {
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 42px;
+    text-align: center;
+    font-size: 48px;
     font-weight: 300;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    margin: 0 auto 16px;
   }
 
   .controls {
@@ -330,7 +373,18 @@
   <button class="mode-btn" data-mode="long">Long break</button>
 </div>
 
-<div class="durations" id="durations"></div>
+<div class="duration-control">
+  <div class="label-row">
+    <span>Session length</span>
+    <span class="value" id="duration-value">25 min</span>
+  </div>
+  <input type="range" class="duration-slider" id="duration-slider" min="1" max="120" step="1" value="25" />
+  <div class="slider-ticks">
+    <span>1 min</span>
+    <span>60 min</span>
+    <span>120 min</span>
+  </div>
+</div>
 
 <div class="timer-stage">
   <svg class="progress-ring" viewBox="0 0 360 360">
@@ -383,9 +437,9 @@
       </g>
     </svg>
   </div>
-
-  <div class="time-display" id="time-display">25:00</div>
 </div>
+
+<div class="time-display" id="time-display">25:00</div>
 
 <div class="controls">
   <button class="btn btn-primary" id="start-btn">Plant</button>
@@ -410,10 +464,10 @@
 
 <script>
 (() => {
-  const DURATIONS = {
-    focus: [5, 10, 25, 45, 60],
-    short: [5],
-    long: [15],
+  const MODE_DEFAULTS = {
+    focus: 25,
+    short: 5,
+    long: 15,
   };
 
   const state = {
@@ -439,7 +493,8 @@
   const forestGrid = $('forest-grid');
   const forestCount = $('forest-count');
   const soundBtn = $('sound-btn');
-  const durationsEl = $('durations');
+  const slider = $('duration-slider');
+  const durationValue = $('duration-value');
 
   const RING_CIRCUMFERENCE = 2 * Math.PI * 170;
   ring.style.strokeDasharray = RING_CIRCUMFERENCE;
@@ -475,25 +530,20 @@
     return s.lastDate === todayStr() ? s.streak : 0;
   }
 
-  // ---- UI: durations ----
-  function renderDurations() {
-    durationsEl.innerHTML = '';
-    const opts = DURATIONS[state.mode];
-    opts.forEach((m) => {
-      const btn = document.createElement('button');
-      btn.className = 'dur-btn' + (m === state.duration ? ' active' : '');
-      btn.textContent = `${m} min`;
-      btn.disabled = state.running;
-      btn.onclick = () => {
-        if (state.running) return;
-        state.duration = m;
-        state.remaining = m * 60;
-        renderDurations();
-        renderTimer();
-      };
-      durationsEl.appendChild(btn);
-    });
+  // ---- UI: slider ----
+  function renderSlider() {
+    slider.value = state.duration;
+    slider.disabled = state.running;
+    durationValue.textContent = `${state.duration} min`;
   }
+
+  slider.addEventListener('input', () => {
+    if (state.running) return;
+    state.duration = parseInt(slider.value, 10);
+    state.remaining = state.duration * 60;
+    durationValue.textContent = `${state.duration} min`;
+    renderTimer();
+  });
 
   // ---- UI: modes ----
   document.querySelectorAll('.mode-btn').forEach((btn) => {
@@ -502,11 +552,10 @@
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.mode = btn.dataset.mode;
-      state.duration = DURATIONS[state.mode][0];
-      if (state.mode === 'focus') state.duration = 25;
+      state.duration = MODE_DEFAULTS[state.mode];
       state.remaining = state.duration * 60;
       ring.classList.toggle('break', state.mode !== 'focus');
-      renderDurations();
+      renderSlider();
       renderTimer();
       resetTreeStages();
     };
@@ -698,7 +747,7 @@
     statusMsg.textContent = state.mode === 'focus'
       ? 'Stay focused — your tree is growing'
       : 'Take a break';
-    renderDurations();
+    renderSlider();
 
     state.intervalId = setInterval(() => {
       state.remaining -= 1;
@@ -719,7 +768,7 @@
     startBtn.textContent = 'Plant another';
     giveUpBtn.style.display = 'none';
     resetBtn.style.display = 'inline-block';
-    renderDurations();
+    renderSlider();
 
     if (state.mode === 'focus') {
       const s = loadState();
@@ -758,7 +807,7 @@
       saveState(s);
       renderStreak();
     }
-    renderDurations();
+    renderSlider();
   }
 
   function reset() {
@@ -775,7 +824,7 @@
     giveUpBtn.style.display = 'none';
     resetBtn.style.display = 'none';
     statusMsg.textContent = '';
-    renderDurations();
+    renderSlider();
   }
 
   startBtn.onclick = start;
@@ -783,7 +832,7 @@
   resetBtn.onclick = reset;
 
   // ---- Init ----
-  renderDurations();
+  renderSlider();
   renderTimer();
   renderForest();
   renderStreak();
