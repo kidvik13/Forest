@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
 <title>Forest — Focus Timer</title>
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#2f5d3a" />
+<meta name="color-scheme" content="light" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Forest" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="apple-touch-icon" href="icon.svg" />
+
 <style>
   :root {
     --bg: #f5efe4;
@@ -20,7 +31,12 @@
     --shadow: 0 4px 20px rgba(60, 50, 30, 0.08);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
 
   html, body {
     background: var(--bg);
@@ -29,13 +45,22 @@
     min-height: 100%;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    overscroll-behavior-y: contain;
   }
 
   body {
-    padding: 32px 20px 80px;
+    padding:
+      max(32px, env(safe-area-inset-top))
+      max(20px, env(safe-area-inset-right))
+      max(80px, env(safe-area-inset-bottom))
+      max(20px, env(safe-area-inset-left));
     max-width: 880px;
     margin: 0 auto;
+    -webkit-user-select: none;
+    user-select: none;
   }
+
+  button { -webkit-user-select: none; user-select: none; }
 
   header {
     display: flex;
@@ -124,7 +149,7 @@
     stroke: var(--leaf);
     stroke-width: 14;
     stroke-linecap: round;
-    transition: stroke-dashoffset 0.4s linear, stroke 0.4s;
+    transition: stroke 0.4s;
   }
   .ring-fg.failed { stroke: var(--danger); }
   .ring-fg.break { stroke: var(--accent); }
@@ -475,6 +500,107 @@
     </svg>`;
   }
 
+  // Cherry — slim curved trunk, wide flat-bottom umbrella canopy with
+  // visible blossom highlights so it reads as a flowering tree, not just
+  // a pink oak.
+  function smallCherry(c) {
+    return `
+      <path class="trunk" d="M100 182 Q102 158 99 134" stroke="${c.trunk}" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path class="trunk" d="M99 138 Q90 132 82 132" stroke="${c.trunk}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path class="trunk" d="M100 136 Q110 132 118 134" stroke="${c.trunk}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse class="canopy" cx="100" cy="124" rx="28" ry="14" fill="${c.leafDark}"/>
+      <ellipse class="canopy" cx="100" cy="116" rx="22" ry="11" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="100" cy="110" rx="14" ry="7" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="84" cy="124" r="2" fill="white" opacity="0.7"/>
+      <circle class="canopy" cx="116" cy="124" r="2" fill="white" opacity="0.7"/>
+      <circle class="canopy" cx="100" cy="112" r="1.6" fill="white" opacity="0.6"/>
+    `;
+  }
+
+  function fullCherry(c) {
+    return `
+      <path class="trunk" d="M100 182 Q103 150 99 128 Q96 116 100 106" stroke="${c.trunk}" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path class="trunk" d="M99 130 Q88 122 76 122" stroke="${c.trunk}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path class="trunk" d="M100 128 Q114 122 124 124" stroke="${c.trunk}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse class="canopy" cx="100" cy="106" rx="46" ry="20" fill="${c.leafDark}"/>
+      <ellipse class="canopy" cx="74" cy="110" rx="20" ry="14" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="126" cy="110" rx="20" ry="14" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="100" cy="88" rx="34" ry="14" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="84" cy="94" rx="14" ry="9" fill="${c.leafLight}"/>
+      <ellipse class="canopy" cx="116" cy="94" rx="14" ry="9" fill="${c.leafLight}"/>
+      <ellipse class="canopy" cx="100" cy="80" rx="14" ry="8" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="72" cy="104" r="2.6" fill="white" opacity="0.75"/>
+      <circle class="canopy" cx="128" cy="104" r="2.6" fill="white" opacity="0.75"/>
+      <circle class="canopy" cx="92" cy="86" r="2.2" fill="white" opacity="0.65"/>
+      <circle class="canopy" cx="108" cy="86" r="2.2" fill="white" opacity="0.65"/>
+      <circle class="canopy" cx="100" cy="100" r="2" fill="white" opacity="0.6"/>
+      <circle class="canopy" cx="84" cy="116" r="1.8" fill="white" opacity="0.55"/>
+      <circle class="canopy" cx="118" cy="116" r="1.8" fill="white" opacity="0.55"/>
+    `;
+  }
+
+  function miniCherry(c) {
+    return `<svg viewBox="0 0 60 60">
+      <ellipse cx="30" cy="55" rx="13" ry="2" fill="#000" opacity="0.08"/>
+      <path class="trunk" d="M30 55 Q31 42 30 30" stroke="${c.trunk}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse class="canopy" cx="30" cy="28" rx="17" ry="9" fill="${c.leafDark}"/>
+      <ellipse class="canopy" cx="30" cy="22" rx="13" ry="6" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="30" cy="18" rx="7" ry="3" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="20" cy="28" r="1.8" fill="white" opacity="0.75"/>
+      <circle class="canopy" cx="40" cy="28" r="1.8" fill="white" opacity="0.75"/>
+      <circle class="canopy" cx="30" cy="20" r="1.4" fill="white" opacity="0.6"/>
+    </svg>`;
+  }
+
+  // Maple — strong straight trunk with a lobed, star-like canopy that
+  // reads as a maple leaf instead of a round bushy tree.
+  function smallMaple(c) {
+    return `
+      <rect class="trunk" x="96" y="130" width="8" height="52" fill="${c.trunk}" rx="2"/>
+      <ellipse class="canopy" cx="100" cy="98" rx="11" ry="14" fill="${c.leafDark}"/>
+      <ellipse class="canopy" cx="80" cy="118" rx="14" ry="9" fill="${c.leafDark}" transform="rotate(-25 80 118)"/>
+      <ellipse class="canopy" cx="120" cy="118" rx="14" ry="9" fill="${c.leafDark}" transform="rotate(25 120 118)"/>
+      <circle class="canopy" cx="100" cy="116" r="14" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="100" cy="106" rx="9" ry="6" fill="${c.leafLight}"/>
+    `;
+  }
+
+  function fullMaple(c) {
+    return `
+      <rect class="trunk" x="94" y="115" width="12" height="67" fill="${c.trunk}" rx="2"/>
+      <path class="trunk" d="M94 142 Q86 132 76 130" stroke="${c.trunk}" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path class="trunk" d="M106 140 Q114 130 124 128" stroke="${c.trunk}" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse class="canopy" cx="100" cy="56" rx="14" ry="20" fill="${c.leafDark}"/>
+      <ellipse class="canopy" cx="66" cy="84" rx="20" ry="15" fill="${c.leafDark}" transform="rotate(-30 66 84)"/>
+      <ellipse class="canopy" cx="134" cy="84" rx="20" ry="15" fill="${c.leafDark}" transform="rotate(30 134 84)"/>
+      <ellipse class="canopy" cx="76" cy="124" rx="18" ry="13" fill="${c.leafDark}" transform="rotate(20 76 124)"/>
+      <ellipse class="canopy" cx="124" cy="124" rx="18" ry="13" fill="${c.leafDark}" transform="rotate(-20 124 124)"/>
+      <circle class="canopy" cx="100" cy="100" r="32" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="100" cy="68" rx="11" ry="14" fill="${c.leaf}"/>
+      <ellipse class="canopy" cx="78" cy="92" rx="14" ry="11" fill="${c.leaf}" transform="rotate(-30 78 92)"/>
+      <ellipse class="canopy" cx="122" cy="92" rx="14" ry="11" fill="${c.leaf}" transform="rotate(30 122 92)"/>
+      <circle class="canopy" cx="100" cy="92" r="11" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="86" cy="78" r="6" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="114" cy="78" r="6" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="92" cy="110" r="5" fill="${c.leafLight}"/>
+      <circle class="canopy" cx="108" cy="110" r="5" fill="${c.leafLight}"/>
+    `;
+  }
+
+  function miniMaple(c) {
+    return `<svg viewBox="0 0 60 60">
+      <ellipse cx="30" cy="55" rx="11" ry="2" fill="#000" opacity="0.08"/>
+      <rect class="trunk" x="28" y="38" width="4" height="18" fill="${c.trunk}" rx="1"/>
+      <ellipse class="canopy" cx="30" cy="14" rx="6" ry="9" fill="${c.leafDark}"/>
+      <ellipse class="canopy" cx="14" cy="26" rx="9" ry="6" fill="${c.leafDark}" transform="rotate(-30 14 26)"/>
+      <ellipse class="canopy" cx="46" cy="26" rx="9" ry="6" fill="${c.leafDark}" transform="rotate(30 46 26)"/>
+      <ellipse class="canopy" cx="20" cy="38" rx="7" ry="5" fill="${c.leafDark}" transform="rotate(20 20 38)"/>
+      <ellipse class="canopy" cx="40" cy="38" rx="7" ry="5" fill="${c.leafDark}" transform="rotate(-20 40 38)"/>
+      <circle class="canopy" cx="30" cy="28" r="11" fill="${c.leaf}"/>
+      <circle class="canopy" cx="30" cy="26" r="6" fill="${c.leafLight}"/>
+    </svg>`;
+  }
+
   // Pine — triangular evergreen, stacked layers
   function smallPine(c) {
     return `
@@ -594,15 +720,15 @@
     },
     cherry: {
       name: 'Cherry',
-      colors: { trunk: '#7a5238', leafDark: '#d77ba0', leaf: '#f1a8c0', leafLight: '#fad0e0' },
-      stages: [seedling, sprout, smallRound, fullRound],
-      mini: miniRound,
+      colors: { trunk: '#7a5238', leafDark: '#c66088', leaf: '#f1a8c0', leafLight: '#fad0e0' },
+      stages: [seedling, sprout, smallCherry, fullCherry],
+      mini: miniCherry,
     },
     maple: {
       name: 'Maple',
-      colors: { trunk: '#7a4a28', leafDark: '#a83825', leaf: '#d96138', leafLight: '#e8a060' },
-      stages: [seedling, sprout, smallRound, fullRound],
-      mini: miniRound,
+      colors: { trunk: '#5a3a22', leafDark: '#962e1f', leaf: '#d9532c', leafLight: '#f0a050' },
+      stages: [seedling, sprout, smallMaple, fullMaple],
+      mini: miniMaple,
     },
     bonsai: {
       name: 'Bonsai',
@@ -635,7 +761,10 @@
     running: false,
     failed: false,
     completed: false,
-    intervalId: null,
+    rafId: null,
+    bgTimeoutId: null,
+    tickStart: 0,
+    tickBase: 0,
     treeType: 'oak',
   };
 
@@ -727,18 +856,27 @@
 
   // ---- Timer rendering -------------------------------------------------
   function fmtTime(secs) {
-    const m = Math.floor(secs / 60).toString().padStart(2, '0');
-    const s = (secs % 60).toString().padStart(2, '0');
+    const safe = Math.max(0, secs);
+    const m = Math.floor(safe / 60).toString().padStart(2, '0');
+    const s = Math.floor(safe % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }
 
+  let lastDisplayedSec = -1;
+
   function renderTimer() {
-    timeDisplay.textContent = fmtTime(state.remaining);
-    // Arc fraction = remaining / MAX_DURATION (consistent: arc shows time left)
+    // Ring + thumb update every call, smoothly during rAF tick.
     const f = Math.min(1, state.remaining / (MAX_DURATION * 60));
     ringFg.setAttribute('stroke-dashoffset', RING_C * (1 - f));
     updateThumb(f);
-    // Tree progress = (duration - remaining) / duration
+
+    // Text only changes on whole-second boundaries to avoid flicker.
+    const displaySec = Math.ceil(state.remaining - 1e-6);
+    if (displaySec !== lastDisplayedSec) {
+      timeDisplay.textContent = fmtTime(Math.max(0, displaySec));
+      lastDisplayedSec = displaySec;
+    }
+
     const total = state.duration * 60;
     const progress = total > 0 ? (total - state.remaining) / total : 0;
     updateTreeStage(progress);
@@ -930,6 +1068,32 @@
   };
 
   // ---- Timer control ---------------------------------------------------
+  function tickFrame() {
+    if (!state.running) return;
+    const elapsedSec = (performance.now() - state.tickStart) / 1000;
+    const next = state.tickBase - elapsedSec;
+    if (next <= 0) {
+      state.remaining = 0;
+      renderTimer();
+      complete();
+      return;
+    }
+    state.remaining = next;
+    renderTimer();
+    state.rafId = requestAnimationFrame(tickFrame);
+  }
+
+  function clearTick() {
+    if (state.rafId !== null) {
+      cancelAnimationFrame(state.rafId);
+      state.rafId = null;
+    }
+    if (state.bgTimeoutId !== null) {
+      clearTimeout(state.bgTimeoutId);
+      state.bgTimeoutId = null;
+    }
+  }
+
   function start() {
     if (state.running) return;
     state.running = true;
@@ -945,17 +1109,26 @@
       : 'Take a break';
     renderTreePicker();
     renderSublabel();
-    renderTimer();
 
-    state.intervalId = setInterval(() => {
-      state.remaining -= 1;
-      renderTimer();
-      if (state.remaining <= 0) complete();
-    }, 1000);
+    state.tickBase = state.duration * 60;
+    state.remaining = state.tickBase;
+    state.tickStart = performance.now();
+    lastDisplayedSec = -1;
+    renderTimer();
+    state.rafId = requestAnimationFrame(tickFrame);
+    // Backstop in case the tab is backgrounded; setTimeout still fires
+    // (throttled but eventually) so completion is guaranteed.
+    state.bgTimeoutId = setTimeout(() => {
+      if (state.running) {
+        state.remaining = 0;
+        renderTimer();
+        complete();
+      }
+    }, state.tickBase * 1000 + 250);
   }
 
   function complete() {
-    clearInterval(state.intervalId);
+    clearTick();
     state.running = false;
     state.completed = true;
     state.remaining = 0;
@@ -992,7 +1165,7 @@
   function giveUp() {
     if (!state.running) return;
     if (!confirm('Give up? Your tree will wither.')) return;
-    clearInterval(state.intervalId);
+    clearTick();
     state.running = false;
     state.failed = true;
     ring.classList.remove('running');
@@ -1013,7 +1186,7 @@
   }
 
   function reset() {
-    clearInterval(state.intervalId);
+    clearTick();
     state.running = false;
     state.failed = false;
     state.completed = false;
@@ -1045,6 +1218,13 @@
   renderForest();
   renderStreak();
   renderSublabel();
+
+  // Service worker for offline / installable PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
 })();
 </script>
 
